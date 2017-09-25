@@ -2,6 +2,7 @@ var twitterKeys = require('./keys');
 var moment = require('moment-twitter');
 var Twitter = require('twitter');
 var Spotify = require('node-spotify-api');
+var request = require('request');
 
 var app = {
 	start: function() {
@@ -11,6 +12,9 @@ var app = {
 		}
 		if (arg === 'spotify-this-song'){
 			this.spotify();
+		}
+		if (arg === 'movie-this') {
+			this.movie();
 		}
 	},
 
@@ -81,6 +85,29 @@ var app = {
 					console.log(err);
 				}) ;
 		}
+	},
+
+	movie: function() {
+		var args = process.argv;
+		var key = '40e9cece'
+		var movieTitle = "";
+		for(var i=3; i<args.length; i++) {
+			movieTitle += args[i] + ' '; 
+		}
+		if(movieTitle === ""){
+			movieTitle = "Mr. Nobody"
+		}
+		request('http://www.omdbapi.com/?apikey=' + key + '&t=' + movieTitle, function(error, response, body) {
+			if(error) {
+				console.log('error');
+			}else {
+				var movieInfo = JSON.parse(body);
+				//console.log(movieInfo);
+				console.log('\nTitle: '+movieInfo.Title+'\nYear: '+movieInfo.Year+'\nIMDB rating: '+movieInfo.Ratings[0].Value+
+					'\nRotten Tomatoes: '+movieInfo.Ratings[1].Value+'\nCountry: '+movieInfo.Country+'\nLanguage: '+movieInfo.Language+
+					'\nPlot: '+movieInfo.Plot+'\nActors: '+movieInfo.Actors);
+			}
+		});
 	}
 
 }
