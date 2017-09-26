@@ -3,18 +3,31 @@ var moment = require('moment-twitter');
 var Twitter = require('twitter');
 var Spotify = require('node-spotify-api');
 var request = require('request');
+var fs = require('fs');
 
 var app = {
-	start: function() {
-		var arg = process.argv[2];
-		if (arg === 'my_tweets'){
+	arg: process.argv[2],
+	
+	searchTerm: function(){
+		var title = "";
+		for (var i=3; i<process.argv.length; i++){
+			title += process.argv[i] + ' '; 
+		}
+		return title;
+	},
+	
+	start: function() {		
+		if (this.arg === 'my-tweets'){
 			this.twitter();
 		}
-		if (arg === 'spotify-this-song'){
-			this.spotify();
+		if (this.arg === 'spotify-this-song'){
+			this.spotify(this.searchTerm());
 		}
-		if (arg === 'movie-this') {
-			this.movie();
+		if (this.arg === 'movie-this') {
+			this.movie(this.searchTerm());
+		}
+		if (this.arg === 'do-what-it-says') {
+			this.random();
 		}
 	},
 
@@ -46,17 +59,13 @@ var app = {
 		});
 	},
 
-	spotify: function(){
+	spotify: function(search){
 		var spotify = new Spotify({
 			id: 'ead8f99c79e748f5bae800a409fdca2c',
 			secret: '6a0147fcd0554ef9ae84e9438ea272c6'
 		});
-		var args = process.argv;
-		var track = "";
+		var track = search;
 		var artist, link, album, name;
-		for(var i=3; i<args.length; i++){
-			track = track + args[i] + " "; 
-		}
 		if (track === ""){
 			spotify
 				.request('https://api.spotify.com/v1/tracks/3DYVWvPh3kGwPasp7yjahc')
@@ -87,13 +96,9 @@ var app = {
 		}
 	},
 
-	movie: function() {
-		var args = process.argv;
+	movie: function(search) {
 		var key = '40e9cece'
-		var movieTitle = "";
-		for(var i=3; i<args.length; i++) {
-			movieTitle += args[i] + ' '; 
-		}
+		var movieTitle = search;
 		if(movieTitle === ""){
 			movieTitle = "Mr. Nobody"
 		}
@@ -102,10 +107,29 @@ var app = {
 				console.log('error');
 			}else {
 				var movieInfo = JSON.parse(body);
-				//console.log(movieInfo);
 				console.log('\nTitle: '+movieInfo.Title+'\nYear: '+movieInfo.Year+'\nIMDB rating: '+movieInfo.Ratings[0].Value+
 					'\nRotten Tomatoes: '+movieInfo.Ratings[1].Value+'\nCountry: '+movieInfo.Country+'\nLanguage: '+movieInfo.Language+
 					'\nPlot: '+movieInfo.Plot+'\nActors: '+movieInfo.Actors);
+			}
+		});
+	},
+
+	random: function(){
+		fs.readFile('random.txt', 'utf8', function(err, data){
+			if(err){
+				console.log(err);
+			}else{
+				var command = data.split(',');
+				for(var i=0; i<command.length; i++){
+					if(command[i] === 'spotify-this-song' || command[i] === 'movie-this'){
+						if(command[i] === "spotify-this-song") {
+							app.spotify(command[i+1]);
+						}
+						if(command[i] === 'movie-this'){
+							app.movie(command[i+1]);
+						}
+					}
+				}
 			}
 		});
 	}
