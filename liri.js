@@ -39,7 +39,7 @@ var app = {
 		  	access_token_secret: twitterKeys.access_token_secret
 		});
 
-		client.get('statuses/user_timeline', function(error, tweets, response) {		
+		client.get('statuses/user_timeline', {count: 20}, function(error, tweets, response) {		
 			var limit = 20;
 			if(error) {
 				console.log(error);
